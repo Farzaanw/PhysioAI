@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LectureLife — Student View</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f0f0f;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, sans-serif;
+      color: white;
+    }
+    #header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: rgba(255,255,255,0.05);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      z-index: 10;
+    }
+    #logo { color: #f0945c; font-weight: 700; font-size: 17px; }
+    #counter { color: rgba(255,255,255,0.5); font-size: 13px; }
+    #status {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    #status.live { background: rgba(52,199,89,0.15); color: #34c759; }
+    #slide-wrap {
+      padding: 80px 16px 24px;
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    #slide-img {
+      width: 100%;
+      border-radius: 10px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      display: none;
+      animation: fadeIn 0.25s ease-out;
+    }
+    #waiting { text-align: center; color: rgba(255,255,255,0.3); }
+    #waiting .dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #f0945c;
+      margin: 0 3px;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    #waiting .dot:nth-child(2) { animation-delay: 0.2s; }
+    #waiting .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.2; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <span id="logo">LectureLife</span>
+    <span id="counter">—</span>
+    <span id="status">Connecting…</span>
+  </div>
+
+  <div id="slide-wrap">
+    <div id="waiting">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <p style="margin-top:16px;font-size:14px;">Waiting for teacher to start…</p>
+    </div>
+    <img id="slide-img" alt="Current slide" />
+  </div>
+
+  <script>
+    const socket = io(window.location.origin, {
+      transports: ["polling", "websocket"]
+    });
+
+    const img = document.getElementById('slide-img');
+    const waiting = document.getElementById('waiting');
+    const counter = document.getElementById('counter');
+    const status = document.getElementById('status');
+
+    let totalSlides = 0;
+
+    // Fetch slide image via HTTP (much more reliable than pushing base64 through socket)
+    function showSlide(index) {
+      img.style.display = 'none';
+      waiting.style.display = 'none';
+
+      const url = `${window.location.origin}/slide/${index}?t=${Date.now()}`;
+      img.onload = () => {
+        img.style.display = 'block';
+        img.style.animation = 'none';
+        img.offsetHeight;
+        img.style.animation = 'fadeIn 0.25s ease-out';
+        counter.textContent = `Slide ${index + 1} / ${totalSlides}`;
+      };
+      img.onerror = () => {
+        waiting.style.display = 'block';
+        waiting.querySelector('p').textContent = 'Error loading slide — retrying…';
+        setTimeout(() => showSlide(index), 1500);
+      };
+      img.src = url;
+    }
+
+    socket.on('connect', () => {
+      status.textContent = 'Live';
+      status.className = 'live';
+    });
+
+    socket.on('disconnect', () => {
+      status.textContent = 'Disconnected';
+      status.className = '';
+    });
+
+    // session now just carries count + currentSlide (no image data)
+    socket.on('session', (data) => {
+      totalSlides = data.count;
+      showSlide(data.currentSlide);
+    });
+
+    socket.on('slide-change', (index) => {
+      showSlide(index);
+    });
+  </script>
+</body>
+</html>

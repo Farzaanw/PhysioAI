@@ -5,7 +5,7 @@ import workerSrc from "pdfjs-dist/build/pdf.worker.min?url";
 import { QRCodeCanvas } from "qrcode.react";
 import { io } from "socket.io-client";
 
-const STUDENT_SERVER_URL = import.meta.env.VITE_STUDENT_URL || "http://localhost:3001";
+const LOCAL_SERVER = "http://localhost:3001"; // only used for socket connection from teacher's own machine
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
 
@@ -211,10 +211,20 @@ export default function LectureLife() {
   };
 
   const startPresenting = async () => {
-    const socket = io(STUDENT_SERVER_URL);
+    // Connect teacher socket using localhost (same machine)
+    const socket = io(LOCAL_SERVER);
     socketRef.current = socket;
     socket.emit("upload-slides", images);
-    setStudentUrl(`${STUDENT_SERVER_URL}/student`);
+
+    // Fetch real LAN IP so the QR code works on student phones
+    try {
+      const res = await fetch(`${LOCAL_SERVER}/info`);
+      const { ip, port } = await res.json();
+      setStudentUrl(`http://${ip}:${port}/student`);
+    } catch {
+      setStudentUrl(`${LOCAL_SERVER}/student`);
+    }
+
     setPresentMode(true);
   };
 
