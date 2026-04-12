@@ -35,17 +35,13 @@ const Spinner = () => (
 export default function LectureLife() {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  // ✅ UPDATED chat state
   const [chatContent, setChatContent] = useState(null);
 
-  /* RESET */
   const resetApp = () => {
     setImages([]);
     setChatContent(null);
   };
 
-  /* PDF UPLOAD */
   const handleUpload = async (e) => {
     const file = e.target.files[0];
     if (!file || file.type !== "application/pdf") return;
@@ -78,9 +74,7 @@ export default function LectureLife() {
     reader.readAsArrayBuffer(file);
   };
 
-  /* ✅ ENHANCE (UPDATED) */
   const enhanceSlide = async (img) => {
-    // show slide immediately
     setChatContent({
       status: "loading",
       image: img,
@@ -88,7 +82,6 @@ export default function LectureLife() {
     });
 
     try {
-      // convert PNG → JPEG
       const jpegBase64 = img.replace("image/png", "image/jpeg").split(",")[1];
 
       const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -136,75 +129,77 @@ export default function LectureLife() {
   };
 
   return (
-    <div css={bg} className="p-6">
+    <div css={bg} className="p-6 flex gap-6">
       {/* LEAVES */}
       <Leaf style={{ top: "10%", left: "5%" }} />
       <Leaf style={{ top: "30%", right: "5%" }} />
       <Leaf style={{ bottom: "10%", left: "10%" }} />
 
-      {/* HEADER */}
-      <div className="flex justify-between mb-8">
-        <h1 className="text-2xl font-bold text-orange-600">LectureLife</h1>
+      {/* LEFT SIDE */}
+      <div className="flex-1">
+        {/* HEADER */}
+        <div className="flex justify-between mb-8">
+          <h1 className="text-2xl font-bold text-orange-600">LectureLife</h1>
 
-        {images.length > 0 && (
-          <button
-            onClick={resetApp}
-            className="px-4 py-2 bg-gray-200 rounded-full text-gray-700 hover:bg-gray-300"
-          >
-            ← Back
-          </button>
+          {images.length > 0 && (
+            <button
+              onClick={resetApp}
+              className="px-4 py-2 bg-gray-200 rounded-full text-gray-700 hover:bg-gray-300"
+            >
+              ← Back
+            </button>
+          )}
+        </div>
+
+        {/* SPINNER */}
+        {loading && <Spinner />}
+
+        {/* UPLOAD */}
+        {!loading && images.length === 0 && (
+          <div className="max-w-3xl mx-auto">
+            <label className="block border-2 border-dashed border-orange-300 rounded-2xl p-16 text-center bg-white cursor-pointer">
+              <p className="text-orange-600 font-semibold text-lg">
+                Drop your lecture recording here
+              </p>
+              <p className="text-sm text-gray-400 mt-2">
+                or click to browse • PDF only
+              </p>
+              <input type="file" onChange={handleUpload} className="hidden" />
+            </label>
+
+            <button className="w-full mt-6 bg-orange-600 text-white py-4 rounded-xl">
+              ✦ Transform & Go Live
+            </button>
+          </div>
+        )}
+
+        {/* SLIDES */}
+        {!loading && images.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+            {images.map((img, i) => (
+              <div key={i} className="relative group">
+                <img src={img} className="rounded-xl shadow" />
+
+                <button
+                  onClick={() => enhanceSlide(img)}
+                  className="absolute bottom-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-white text-xs opacity-0 group-hover:opacity-100"
+                  style={{
+                    background: "linear-gradient(135deg,#e05c2a,#f0945c)",
+                  }}
+                >
+                  ✦ Enhance
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
-      {/* SPINNER */}
-      {loading && <Spinner />}
-
-      {/* UPLOAD */}
-      {!loading && images.length === 0 && (
-        <div className="max-w-3xl mx-auto">
-          <label className="block border-2 border-dashed border-orange-300 rounded-2xl p-16 text-center bg-white cursor-pointer">
-            <p className="text-orange-600 font-semibold text-lg">
-              Drop your lecture recording here
-            </p>
-            <p className="text-sm text-gray-400 mt-2">
-              or click to browse • PDF only
-            </p>
-            <input type="file" onChange={handleUpload} className="hidden" />
-          </label>
-
-          <button className="w-full mt-6 bg-orange-600 text-white py-4 rounded-xl">
-            ✦ Transform & Go Live
-          </button>
-        </div>
-      )}
-
-      {/* SLIDES */}
-      {!loading && images.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-          {images.map((img, i) => (
-            <div key={i} className="relative group">
-              <img src={img} className="rounded-xl shadow" />
-
-              <button
-                onClick={() => enhanceSlide(img)}
-                className="absolute bottom-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-white text-xs opacity-0 group-hover:opacity-100"
-                style={{
-                  background: "linear-gradient(135deg,#e05c2a,#f0945c)",
-                }}
-              >
-                ✦ Enhance
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ✅ CHAT PANEL (UPDATED) */}
+      {/* RIGHT CHAT PANEL */}
       {chatContent && (
-        <div className="fixed right-6 top-20 w-80 bg-white p-4 rounded-xl shadow">
+        <div className="w-80 bg-white p-4 rounded-xl shadow sticky top-6 h-fit">
           <h3 className="text-orange-600 font-semibold mb-3">AI Assistant</h3>
 
-          {/* slide preview */}
           {chatContent.image && (
             <img
               src={chatContent.image}
@@ -213,7 +208,6 @@ export default function LectureLife() {
             />
           )}
 
-          {/* states */}
           {chatContent.status === "loading" && (
             <p className="text-orange-400 animate-pulse">Analyzing slide...</p>
           )}
