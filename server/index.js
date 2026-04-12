@@ -26,7 +26,7 @@ function getLocalIP() {
 let session = {
   slides: [],
   currentSlide: 0,
-  questions: [], // { id, text, slideIndex, ts, done }
+  questions: [],
 };
 
 function broadcastQuestions() {
@@ -34,7 +34,14 @@ function broadcastQuestions() {
 }
 
 app.get('/', (req, res) => res.redirect('/student'));
-app.get('/info', (req, res) => res.json({ ip: getLocalIP(), port: 3001 }));
+
+app.get('/info', (req, res) => {
+  res.json({
+    ip: getLocalIP(),
+    ngrokUrl: process.env.NGROK_URL || `http://${getLocalIP()}`,
+  });
+});
+
 app.get('/student', (req, res) => res.sendFile(path.join(__dirname, 'student.html')));
 
 app.get('/slide/:index', (req, res) => {
@@ -61,7 +68,6 @@ io.on('connection', (socket) => {
     io.emit('slide-change', index);
   });
 
-  // Student asks a question
   socket.on('submit-question', (text) => {
     if (!text?.trim()) return;
     const question = {
@@ -75,13 +81,11 @@ io.on('connection', (socket) => {
     broadcastQuestions();
   });
 
-  // Teacher dismisses a question
   socket.on('dismiss-question', (id) => {
     session.questions = session.questions.filter(q => q.id !== id);
     broadcastQuestions();
   });
 
-  // Teacher clears all
   socket.on('clear-questions', () => {
     session.questions = [];
     broadcastQuestions();
@@ -90,7 +94,8 @@ io.on('connection', (socket) => {
 
 server.listen(3001, '0.0.0.0', () => {
   const ip = getLocalIP();
+  const ngrok = process.env.NGROK_URL || `http://${ip}`;
   console.log(`\n✅ Server ready`);
-  console.log(`   Teacher app:  http://localhost:3001`);
-  console.log(`   Student view: http://${ip}:3001/student\n`);
+  console.log(`   Teacher app:  http://localhost:80`);
+  console.log(`   Student view: ${ngrok}/student\n`);
 });

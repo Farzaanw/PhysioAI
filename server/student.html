@@ -12,7 +12,6 @@
       display: flex; flex-direction: column;
       font-family: -apple-system, sans-serif; color: white;
     }
-
     #header {
       position: fixed; top: 0; left: 0; right: 0;
       display: flex; align-items: center; justify-content: space-between;
@@ -25,7 +24,6 @@
     #counter { color: rgba(255,255,255,0.5); font-size: 13px; }
     #status { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); }
     #status.live { background: rgba(52,199,89,0.15); color: #34c759; }
-
     #slide-area {
       flex: 1; display: flex; align-items: center; justify-content: center;
       padding: 80px 24px 100px;
@@ -43,8 +41,6 @@
     }
     .dot:nth-child(2) { animation-delay: 0.2s; }
     .dot:nth-child(3) { animation-delay: 0.4s; }
-
-    /* ── Question bar fixed at bottom ── */
     #question-bar {
       position: fixed; bottom: 0; left: 0; right: 0;
       padding: 12px 16px;
@@ -73,8 +69,6 @@
     #question-send:hover { background: #e07840; transform: scale(1.05); }
     #question-send:active { transform: scale(0.95); }
     #question-send:disabled { background: rgba(255,255,255,0.1); cursor: default; transform: none; }
-
-    /* ── Sent confirmation toast ── */
     #toast {
       position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
       background: rgba(52,199,89,0.15); border: 1px solid rgba(52,199,89,0.3);
@@ -84,19 +78,16 @@
       pointer-events: none; white-space: nowrap;
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
     @keyframes pulse { 0%,100%{opacity:.2;transform:scale(.8)} 50%{opacity:1;transform:scale(1)} }
     @keyframes fadeIn { from{opacity:0;transform:scale(.98)} to{opacity:1;transform:scale(1)} }
   </style>
 </head>
 <body>
-
   <div id="header">
     <span id="logo">LectureLife</span>
     <span id="counter">—</span>
     <span id="status">Connecting…</span>
   </div>
-
   <div id="slide-area">
     <div id="waiting">
       <div class="dot"></div><div class="dot"></div><div class="dot"></div>
@@ -104,7 +95,6 @@
     </div>
     <img id="slide-img" alt="Current slide" />
   </div>
-
   <div id="question-bar">
     <input id="question-input" type="text" placeholder="Ask the teacher a question…" maxlength="200" />
     <button id="question-send">
@@ -113,13 +103,15 @@
       </svg>
     </button>
   </div>
-
   <div id="toast">✓ Question sent to teacher</div>
 
   <script>
-    const socket = io(window.location.origin, { transports: ['polling', 'websocket'] });
+    const socket = io(window.location.origin, {
+      transports: ['polling', 'websocket'],
+      extraHeaders: { 'ngrok-skip-browser-warning': 'true' }
+    });
 
-    const img    = document.getElementById('slide-img');
+    const img     = document.getElementById('slide-img');
     const waiting = document.getElementById('waiting');
     const counter = document.getElementById('counter');
     const status  = document.getElementById('status');
@@ -139,7 +131,10 @@
         img.style.animation = 'fadeIn 0.25s ease-out';
         counter.textContent = `Slide ${index + 1} / ${totalSlides}`;
       };
-      img.onerror = () => { waiting.style.display = 'block'; setTimeout(() => showSlide(index), 1500); };
+      img.onerror = () => {
+        waiting.style.display = 'block';
+        setTimeout(() => showSlide(index), 1500);
+      };
       img.src = url;
     }
 
@@ -160,7 +155,7 @@
       input.value = '';
       sendBtn.disabled = true;
       showToast();
-      setTimeout(() => { sendBtn.disabled = false; }, 1500); // brief cooldown
+      setTimeout(() => { sendBtn.disabled = false; }, 1500);
     }
 
     sendBtn.addEventListener('click', sendQuestion);

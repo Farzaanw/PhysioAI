@@ -6,6 +6,7 @@ import { QRCodeCanvas } from "qrcode.react";
 import { io } from "socket.io-client";
 
 const LOCAL_SERVER = "http://localhost:3001";
+const NGROK_URL = "https://lining-quintet-flock.ngrok-free.dev";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
 
@@ -36,19 +37,15 @@ function NavButton({ direction, onClick, disabled }) {
       style={{
         position: "absolute",
         [direction === "left" ? "left" : "right"]: 12,
-        top: "50%",
-        transform: "translateY(-50%)",
-        width: 44, height: 44,
-        borderRadius: "50%",
+        top: "50%", transform: "translateY(-50%)",
+        width: 44, height: 44, borderRadius: "50%",
         border: "1px solid rgba(255,255,255,0.15)",
         background: "rgba(255,255,255,0.08)",
-        color: "white",
-        fontSize: 26,
+        color: "white", fontSize: 26,
         cursor: disabled ? "default" : "pointer",
         opacity: disabled ? 0.2 : 0.8,
         display: "flex", alignItems: "center", justifyContent: "center",
-        backdropFilter: "blur(4px)",
-        zIndex: 10,
+        backdropFilter: "blur(4px)", zIndex: 10,
       }}
     >
       {direction === "left" ? "‹" : "›"}
@@ -82,8 +79,8 @@ function PresentOverlay({ images, socket, studentUrl, onClose }) {
   const [current, setCurrent] = useState(0);
   const [showQR, setShowQR] = useState(true);
   const [questions, setQuestions] = useState([]);
-  const [floatingBubble, setFloatingBubble] = useState(null); // { id, text } currently floating
-  const [landedIds, setLandedIds] = useState(new Set()); // ids that have completed animation
+  const [floatingBubble, setFloatingBubble] = useState(null);
+  const [landedIds, setLandedIds] = useState(new Set());
   const prevQIds = useRef(new Set());
 
   const prev = useCallback(() => setCurrent((c) => Math.max(0, c - 1)), []);
@@ -103,18 +100,14 @@ function PresentOverlay({ images, socket, studentUrl, onClose }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [next, prev, onClose]);
 
-  // Listen for incoming questions — show floating bubble for each new one
   useEffect(() => {
     if (!socket) return;
     const handler = (qs) => {
       setQuestions(qs);
-      // Find newly arrived questions
       const incoming = qs.filter(q => !prevQIds.current.has(q.id));
       if (incoming.length > 0) {
-        // Show the latest one as a floating bubble
         const newest = incoming[0];
         setFloatingBubble({ id: newest.id, text: newest.text });
-        // After float animation (~1.8s), mark as landed so it glows in the sidebar
         setTimeout(() => {
           setLandedIds(prev => new Set([...prev, newest.id]));
           setFloatingBubble(null);
@@ -197,7 +190,7 @@ function PresentOverlay({ images, socket, studentUrl, onClose }) {
           <NavButton direction="right" onClick={next} disabled={current === images.length - 1} />
         </div>
 
-        {/* RIGHT PANEL: QR + Questions stacked */}
+        {/* RIGHT PANEL */}
         {showQR && (
           <div style={{ width: 260, background: "rgba(255,255,255,0.03)", borderLeft: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden" }}>
 
@@ -213,7 +206,6 @@ function PresentOverlay({ images, socket, studentUrl, onClose }) {
               {studentUrl && (
                 <span style={{ fontSize: 9, color: "#888", textAlign: "center", wordBreak: "break-all", lineHeight: 1.4 }}>{studentUrl}</span>
               )}
-              {/* Slide dots */}
               <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center" }}>
                 {images.map((_, i) => (
                   <button key={i} onClick={() => setCurrent(i)}
@@ -224,7 +216,6 @@ function PresentOverlay({ images, socket, studentUrl, onClose }) {
 
             {/* Questions section */}
             <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-              {/* Questions header */}
               <div style={{ padding: "12px 16px 8px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 600 }}>QUESTIONS</span>
@@ -242,7 +233,6 @@ function PresentOverlay({ images, socket, studentUrl, onClose }) {
                 )}
               </div>
 
-              {/* Question list */}
               <div style={{ flex: 1, overflowY: "auto", padding: "0 10px 10px", display: "flex", flexDirection: "column", gap: 8 }}>
                 {questions.length === 0 ? (
                   <div style={{ textAlign: "center", padding: "24px 0", color: "rgba(255,255,255,0.2)", fontSize: 12 }}>
@@ -250,15 +240,14 @@ function PresentOverlay({ images, socket, studentUrl, onClose }) {
                   </div>
                 ) : (
                   questions.map((q) => (
-                    <div key={q.id}
-                      style={{
-                        background: landedIds.has(q.id) ? "rgba(240,148,92,0.08)" : "rgba(255,255,255,0.04)",
-                        border: landedIds.has(q.id) ? "1px solid rgba(240,148,92,0.5)" : "1px solid rgba(255,255,255,0.07)",
-                        borderRadius: 10, padding: "10px 12px", position: "relative",
-                        animation: landedIds.has(q.id) ? "landInSidebar 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards" : "none",
-                        boxShadow: landedIds.has(q.id) ? "0 0 16px rgba(240,148,92,0.15)" : "none",
-                        transition: "border 0.4s, background 0.4s, box-shadow 0.4s",
-                      }}>
+                    <div key={q.id} style={{
+                      background: landedIds.has(q.id) ? "rgba(240,148,92,0.08)" : "rgba(255,255,255,0.04)",
+                      border: landedIds.has(q.id) ? "1px solid rgba(240,148,92,0.5)" : "1px solid rgba(255,255,255,0.07)",
+                      borderRadius: 10, padding: "10px 12px", position: "relative",
+                      animation: landedIds.has(q.id) ? "landInSidebar 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards" : "none",
+                      boxShadow: landedIds.has(q.id) ? "0 0 16px rgba(240,148,92,0.15)" : "none",
+                      transition: "border 0.4s, background 0.4s, box-shadow 0.4s",
+                    }}>
                       <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.85)", lineHeight: 1.5, marginRight: 18 }}>{q.text}</p>
                       <p style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginTop: 5 }}>
                         Slide {q.slideIndex + 1} · {new Date(q.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -306,7 +295,6 @@ export default function LectureLife() {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [chatContent, setChatContent] = useState(null);
-  const [pendingImage, setPendingImage] = useState(null);
   const [presentMode, setPresentMode] = useState(false);
   const [studentUrl, setStudentUrl] = useState(null);
   const socketRef = useRef(null);
@@ -324,13 +312,7 @@ export default function LectureLife() {
     const socket = io(LOCAL_SERVER);
     socketRef.current = socket;
     socket.emit("upload-slides", images);
-    try {
-      const res = await fetch(`${LOCAL_SERVER}/info`);
-      const { ip, port } = await res.json();
-      setStudentUrl(`http://${ip}:${port}/student`);
-    } catch {
-      setStudentUrl(`${LOCAL_SERVER}/student`);
-    }
+    setStudentUrl(`${NGROK_URL}/student`);
     setPresentMode(true);
   };
 
@@ -358,65 +340,26 @@ export default function LectureLife() {
     reader.readAsArrayBuffer(file);
   };
 
-  const enhanceSlide = (img) => {
-    setPendingImage(img);
-    setChatContent({
-      status: "select-mode",
-      image: img,
-      text: "What type of interactive style do you want?",
-    });
-  };
-
-  const sendToAgent1 = async (modeLabel) => {
-    if (!pendingImage) return;
-
-    const statusSteps = [
-      "Fetching data...",
-      "Parsing slide pixels...",
-      "Extracting content...",
-      "Detecting layout cues...",
-      "Mapping to interactive mode...",
-      "Drafting activity blocks...",
-    ];
-
-    setChatContent({
-      status: "loading",
-      image: pendingImage,
-      text: null,
-      lines: [statusSteps[0]],
-    });
-
-    const timers = statusSteps.slice(1).map((step, index) =>
-      setTimeout(() => {
-        setChatContent((prev) => {
-          if (!prev || prev.status !== "loading") return prev;
-          const existing = Array.isArray(prev.lines) ? prev.lines : [];
-          return { ...prev, lines: [...existing, step] };
-        });
-      }, 700 * (index + 1))
-    );
-
+  const enhanceSlide = async (img) => {
+    setChatContent({ status: "loading", image: img, text: null });
     try {
-      const res = await fetch("http://localhost:3333/api/agent1/extract", {
+      const jpegBase64 = img.replace("image/png", "image/jpeg").split(",")[1];
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          imageDataUrl: pendingImage,
-          interactionMode: modeLabel,
-          prompt: `Analyze this slide and output structured extraction that Agent 2 can directly use.\nUser selected mode: ${modeLabel}.`,
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 500,
+          messages: [{ role: "user", content: [
+            { type: "image", source: { type: "base64", media_type: "image/jpeg", data: jpegBase64 } },
+            { type: "text", text: "Summarize this slide clearly with key points." },
+          ]}],
         }),
       });
-
-      if (!res.ok) {
-        throw new Error("Backend error");
-      }
-
-      setChatContent({ status: "done", image: pendingImage, text: "Create interactive slide..." });
-      setPendingImage(null);
+      const data = await res.json();
+      setChatContent({ status: "done", image: img, text: data.content?.[0]?.text || "No response" });
     } catch {
-      setChatContent({ status: "error", image: pendingImage, text: "Error sending to backend" });
-    } finally {
-      timers.forEach(clearTimeout);
+      setChatContent({ status: "error", image: img, text: "Error analyzing slide" });
     }
   };
 
@@ -493,26 +436,7 @@ export default function LectureLife() {
           <div className="w-80 bg-white p-4 rounded-xl shadow sticky top-6 h-fit">
             <h3 className="text-orange-600 font-semibold mb-3">AI Assistant</h3>
             {chatContent.image && <img src={chatContent.image} alt="Slide" className="rounded-lg mb-3" />}
-            {chatContent.status === "loading" && (
-              <div className="space-y-1">
-                {(Array.isArray(chatContent.lines) ? chatContent.lines : ["Working..."]).map((line, idx) => (
-                  <p key={idx} className="text-orange-400 animate-pulse text-sm">
-                    {line}
-                  </p>
-                ))}
-              </div>
-            )}
-            {chatContent.status === "select-mode" && (
-              <div className="space-y-2">
-                <p className="text-sm text-gray-700">{chatContent.text}</p>
-                <div className="flex flex-col gap-2">
-                  <button onClick={() => sendToAgent1("Quiz")} className="px-3 py-2 rounded-lg bg-orange-100 text-orange-700">Quiz</button>
-                  <button onClick={() => sendToAgent1("Game")} className="px-3 py-2 rounded-lg bg-orange-100 text-orange-700">Game</button>
-                  <button onClick={() => sendToAgent1("Storymode / Walkthrough")} className="px-3 py-2 rounded-lg bg-orange-100 text-orange-700">Storymode / Walkthrough</button>
-                  <button onClick={() => sendToAgent1("Explore mode")} className="px-3 py-2 rounded-lg bg-orange-100 text-orange-700">Explore mode</button>
-                </div>
-              </div>
-            )}
+            {chatContent.status === "loading" && <p className="text-orange-400 animate-pulse">Analyzing slide...</p>}
             {chatContent.status === "done" && <p className="text-sm text-gray-700 whitespace-pre-wrap">{chatContent.text}</p>}
             {chatContent.status === "error" && <p className="text-red-500 text-sm">{chatContent.text}</p>}
           </div>
