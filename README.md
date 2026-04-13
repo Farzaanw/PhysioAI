@@ -158,54 +158,72 @@ PDF Slide (image)
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-org/lecturelife
-cd lecturelife
+git clone https://github.com/Farzaanw/PhysioAI
+cd PhysioAI
 ```
 
-### 2. Start the backend server
+### 2. Set up the environment file
 
-```bash
-cd server
-npm install
-NGROK_URL=https://your-ngrok-url.ngrok-free.dev node index.js
-```
-
-### 3. Start the agent workflow
+> ⚠️ **Required:** Create a `.env` file inside the `AgentWorkflow/` folder before starting the agent workflow. Without this file, the AI pipeline will not function.
 
 ```bash
 cd AgentWorkflow
-npm install
-echo "ANTHROPIC_API_KEY=your_key_here" > .env
-echo "ANTHROPIC_BASE_URL=https://api.anthropic.com" >> .env
-npx tsx src/api/server.ts
+cat > .env << EOF
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+ANTHROPIC_BASE_URL=https://api.anthropic.com
+EOF
 ```
 
-### 4. Start the teacher frontend
+### 3. Quick Start — Single Command (Recommended)
+
+The easiest way to run all four services at once is with the included `start.sh` script in the project root:
 
 ```bash
-cd frontend
-npm install
-npm run dev
+# Make it executable (first time only)
+chmod +x start.sh
+
+# Start everything
+./start.sh
 ```
 
-### 5. Start ngrok
+This launches all four services in the background in the correct order:
+1. **Server** (`localhost:3001`) — Express + Socket.io backend
+2. **Agent Workflow** (`localhost:3333`) — Mastra AI pipeline
+3. **ngrok** — Public tunnel at `https://lining-quintet-flock.ngrok-free.dev`
+4. **Frontend** (`localhost:5173`) — React teacher app
 
+Press `Ctrl+C` to stop all services cleanly.
+
+### 4. Manual Start — Four Separate Terminals
+
+If you prefer to run each service in its own terminal for easier debugging:
+
+**Terminal 1 — Server:**
 ```bash
-ngrok http 3001
+cd server && NGROK_URL=https://lining-quintet-flock.ngrok-free.dev node index.js
 ```
 
-Restart the server with the ngrok URL printed in the terminal:
-
+**Terminal 2 — ngrok:**
 ```bash
-NGROK_URL=https://your-url.ngrok-free.dev node index.js
+ngrok http --url=lining-quintet-flock.ngrok-free.dev 3001
 ```
 
-### 6. Access the application
+**Terminal 3 — Agent Workflow:**
+```bash
+cd AgentWorkflow && npx tsx src/api/server.ts
+```
+
+**Terminal 4 — Frontend:**
+```bash
+cd frontend && npm run dev
+```
+
+### 5. Access the application
 
 | Role | URL |
 |---|---|
 | Teacher | http://localhost:5173 |
-| Student | https://your-url.ngrok-free.dev/student |
+| Student | https://lining-quintet-flock.ngrok-free.dev/student |
 
 ---
 
@@ -296,8 +314,10 @@ The resolution was replacing the default `anthropic` import with `createAnthropi
 
 ## Team
 
-Built at **HackUP** — April 2026
+Built at **[Hackathon Name]** — April 2026
 
+---
 
+## License
 
 MIT
