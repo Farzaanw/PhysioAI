@@ -4,6 +4,8 @@
 
 Traditional lecture attendance is declining — research shows that students retain significantly less information from passive lecture formats compared to active learning approaches (Freeman et al., 2014)¹. Students do not engage with static slides, teachers struggle to assess understanding in real time, and lecture recordings are rarely watched (Burchfield & Sappington, 2000)². LectureLife fixes this — teachers upload a PDF, go live instantly, and an AI agent pipeline transforms every slide into quizzes, summaries, and interactive content while students follow along on any device.
 
+Demo: https://devpost.com/software/lecture-life-jna0bk?_gl=1*1mhibdj*_gcl_au*MTU3OTkyNzE4NS4xNzc2MDk4MTc4*_ga*NzE1NDk4NjEuMTc3NjA5ODE3OQ..*_ga_0YHJK3Y10M*czE3NzgxOTc2NDIkbzUkZzEkdDE3NzgxOTc2NTIkajUwJGwwJGgw
+
 ---
 
 ## Features
